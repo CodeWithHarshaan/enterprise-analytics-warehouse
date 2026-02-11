@@ -1,10 +1,18 @@
+{{ config(materialized='incremental') }}
+
 {% set payment_methods = ['credit_card', 'coupon', 'bank_transfer', 'gift_card'] %}
 
 with orders as (
 
-    select * from {{ ref('stg_orders') }}
+    select *
+    from {{ ref('stg_orders') }}
+
+    {% if is_incremental() %}
+        where order_date > (select max(order_date) from {{ this }})
+    {% endif %}
 
 ),
+
 
 payments as (
 
